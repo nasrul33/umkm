@@ -117,6 +117,7 @@
                          di produksi); suite test memakai nilai khusus test ini. -->
                     <environmentVariables>
                         <JWT_SECRET>test-only-jwt-secret-untuk-suite-lokal-48-karakter</JWT_SECRET>
+                        <FIELD_ENCRYPTION_KEY>Phe6lq4EzTuZhp5W8K2/Om+3TSVVF13MbosJFFeasDY=</FIELD_ENCRYPTION_KEY>
                     </environmentVariables>
                 </configuration>
             </plugin>

@@ -7,9 +7,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/** SRS-B2-03: CRUD karyawan — pola identik ProductController. */
+/**
+ * SRS-B2-03: CRUD karyawan. Berbeda dari master data lain, seluruh controller
+ * OWNER-only (temuan audit NFR-05): respons memuat NPWP dan gaji karyawan —
+ * data sensitif yang tidak boleh terbaca role STAFF.
+ */
 @RestController
 @RequestMapping("/app/master-data/employees")
+@PreAuthorize("hasRole('OWNER')")
 public class EmployeeController {
 
     private final EmployeeRepository repository;

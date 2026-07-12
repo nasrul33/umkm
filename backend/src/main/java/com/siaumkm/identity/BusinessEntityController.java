@@ -8,10 +8,13 @@ import java.util.UUID;
 
 /**
  * SRS-B1: endpoint privat (di balik /app/**, lihat SecurityConfig).
- * Hanya OWNER yang boleh mengubah identitas usaha — data ini fondasi kalkulasi pajak.
+ * Seluruh controller OWNER-only (temuan audit NFR-05): respons memuat
+ * NPWP/NIK pemilik plaintext — data pribadi (UU PDP) yang tidak boleh
+ * terbaca role STAFF meski tersimpan terenkripsi di database.
  */
 @RestController
 @RequestMapping("/app/identity")
+@PreAuthorize("hasRole('OWNER')")
 public class BusinessEntityController {
 
     private final BusinessEntityRepository repository;

@@ -26,6 +26,9 @@ siaumkm:
     # KRITIS audit keamanan: default ter-commit = token bisa dipalsukan.
     jwt-secret: ${JWT_SECRET}
     jwt-expiry-minutes: ${JWT_EXPIRY_MINUTES:480}
+    # NFR-05: kunci AES-256 enkripsi kolom sensitif (NPWP/NIK). SENGAJA tanpa
+    # default — gagal start bila tidak di-set. Generate: openssl rand -base64 32
+    field-encryption-key: ${FIELD_ENCRYPTION_KEY}
   pjap:
     provider: ${PJAP_PROVIDER:}
     base-url: ${PJAP_BASE_URL:}

@@ -1,6 +1,8 @@
 package com.siaumkm.masterdata;
 
+import com.siaumkm.common.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -14,9 +16,10 @@ public class Employee {
 
     @Column(nullable = false) private String nama;
 
-    // TODO NFR: NPWP wajib dienkripsi di application layer sebelum rilis —
-    // konsisten dengan penanganan npwp/nik di BusinessEntity (belum diimplementasi).
-    @Column(length = 16) private String npwp;
+    // NFR-05: ciphertext AES-256-GCM (V5); format divalidasi atas plaintext.
+    @Pattern(regexp = "^[0-9]{16}$", message = "NPWP harus 16 digit (format Coretax)")
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 128) private String npwp;
 
     @Column(name = "gaji_bulanan", precision = 19, scale = 2)
     private BigDecimal gajiBulanan;

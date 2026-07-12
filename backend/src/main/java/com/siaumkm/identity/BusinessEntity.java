@@ -1,5 +1,6 @@
 package com.siaumkm.identity;
 
+import com.siaumkm.common.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -30,13 +31,18 @@ public class BusinessEntity {
     @Column(name = "nama_pemilik", nullable = false, length = 200)
     private String namaPemilik;
 
+    // NFR-05: tersimpan sebagai ciphertext AES-256-GCM (V5). @Pattern tetap
+    // memvalidasi plaintext 16 digit di memori SEBELUM enkripsi — CHECK format
+    // di database sudah dihapus karena tidak bisa memvalidasi ciphertext.
     @Pattern(regexp = "^[0-9]{16}$", message = "NPWP harus 16 digit (format Coretax)")
-    @Column(name = "npwp", unique = true, length = 16)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "npwp", unique = true, length = 128)
     private String npwp;
 
     @NotNull
     @Pattern(regexp = "^[0-9]{16}$", message = "NIK harus 16 digit")
-    @Column(name = "nik_pemilik", nullable = false, length = 16)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "nik_pemilik", nullable = false, length = 128)
     private String nikPemilik;
 
     @Column(name = "nib", length = 20)

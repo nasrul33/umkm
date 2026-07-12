@@ -100,6 +100,20 @@ class AuthSecurityTest {
     }
 
     @Test
+    void dataSensitif_identitasDanKaryawan_staffDitolak403() {
+        // Temuan audit NFR-05: respons memuat NPWP/NIK/gaji plaintext —
+        // OWNER-only meski datanya terenkripsi di database.
+        String staffToken = token("staff@uji.id", "rahasia-staff");
+
+        var identitas = kirim(HttpMethod.GET, "/app/identity/" + java.util.UUID.randomUUID(),
+                staffToken, null);
+        assertThat(identitas.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+
+        var karyawan = kirim(HttpMethod.GET, "/app/master-data/employees", staffToken, null);
+        assertThat(karyawan.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void tokenNgawur_ditolak401() {
         var resp = kirim(HttpMethod.GET, "/app/master-data/products", "token.palsu.ngawur", null);
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
