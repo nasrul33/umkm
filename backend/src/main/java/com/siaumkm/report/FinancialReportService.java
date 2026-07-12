@@ -46,10 +46,11 @@ public class FinancialReportService {
             "SELECT COALESCE(SUM(saldo), 0) FROM vw_balance_sheet WHERE kode_akun IN ('1000','1100')",
             BigDecimal.class);
 
+        // periode bertipe DATE (V4) — perbandingan bebas timezone sesi.
         BigDecimal labaBulanIni = jdbcTemplate.queryForObject(
             """
             SELECT COALESCE(SUM(CASE WHEN tipe = 'PENDAPATAN' THEN saldo ELSE -saldo END), 0)
-            FROM vw_income_statement WHERE periode = date_trunc('month', CURRENT_DATE)
+            FROM vw_income_statement WHERE periode = date_trunc('month', CURRENT_DATE)::date
             """, BigDecimal.class);
 
         BigDecimal piutangJatuhTempo = jdbcTemplate.queryForObject(
