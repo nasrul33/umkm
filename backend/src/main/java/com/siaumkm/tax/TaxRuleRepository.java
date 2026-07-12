@@ -15,15 +15,22 @@ public interface TaxRuleRepository extends JpaRepository<TaxRule, UUID> {
      * sistem saat kalkulasi dijalankan — penting untuk kalkulasi ulang/audit
      * periode lampau yang tetap harus memakai aturan yang berlaku saat itu.
      */
-    @Query("""
-        SELECT r FROM TaxRule r
-        WHERE r.kodeAturan = :kodeAturan
-        AND :bentukBadan MEMBER OF r.bentukBadanBerlaku
-        AND r.berlakuDari <= :tanggalTransaksi
-        AND (r.berlakuSampai IS NULL OR r.berlakuSampai >= :tanggalTransaksi)
-        ORDER BY r.berlakuDari DESC
-        """)
-    Optional<TaxRule> findAturanAktif(@Param("kodeAturan") String kodeAturan,
-                                       @Param("bentukBadan") BentukBadanUsaha bentukBadan,
-                                       @Param("tanggalTransaksi") LocalDate tanggalTransaksi);
+    @Query(value = """
+        SELECT * FROM tax_rule r
+        WHERE r.kode_aturan = :kodeAturan
+        AND CAST(:bentukBadan AS bentuk_badan_usaha) = ANY(r.bentuk_badan_berlaku)
+        AND r.berlaku_dari <= :tanggalTransaksi
+        AND (r.berlaku_sampai IS NULL OR r.berlaku_sampai >= :tanggalTransaksi)
+        ORDER BY r.berlaku_dari DESC
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<TaxRule> findAturanAktifNative(@Param("kodeAturan") String kodeAturan,
+                                             @Param("bentukBadan") String bentukBadan,
+                                             @Param("tanggalTransaksi") LocalDate tanggalTransaksi);
+
+    default Optional<TaxRule> findAturanAktif(String kodeAturan,
+                                               BentukBadanUsaha bentukBadan,
+                                               LocalDate tanggalTransaksi) {
+        return findAturanAktifNative(kodeAturan, bentukBadan.name(), tanggalTransaksi);
+    }
 }

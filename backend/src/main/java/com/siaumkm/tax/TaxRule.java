@@ -2,6 +2,8 @@ package com.siaumkm.tax;
 
 import com.siaumkm.identity.BusinessEntity.BentukBadanUsaha;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -35,9 +37,11 @@ public class TaxRule {
     @Column(name = "ambang_atas", precision = 19, scale = 2)
     private BigDecimal ambangAtas;
 
-    @ElementCollection(targetClass = BentukBadanUsaha.class)
+    // Kolom array enum native PostgreSQL (bentuk_badan_usaha[]) sesuai schema.sql —
+    // bukan @ElementCollection/tabel terpisah.
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Enumerated(EnumType.STRING)
-    @Column(name = "bentuk_badan_berlaku")
+    @Column(name = "bentuk_badan_berlaku", columnDefinition = "bentuk_badan_usaha[]")
     private List<BentukBadanUsaha> bentukBadanBerlaku;
 
     @Column(name = "berlaku_dari", nullable = false)
