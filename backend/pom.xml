@@ -109,6 +109,17 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- JWT_SECRET sengaja tanpa default di application.yml (fail-fast
+                         di produksi); suite test memakai nilai khusus test ini. -->
+                    <environmentVariables>
+                        <JWT_SECRET>test-only-jwt-secret-untuk-suite-lokal-48-karakter</JWT_SECRET>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

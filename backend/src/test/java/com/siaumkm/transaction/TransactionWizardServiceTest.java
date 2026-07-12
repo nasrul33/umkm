@@ -1,5 +1,7 @@
 package com.siaumkm.transaction;
 
+import com.siaumkm.auth.AppUser;
+import com.siaumkm.auth.AppUserRepository;
 import com.siaumkm.masterdata.ChartOfAccountRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,14 +48,15 @@ class TransactionWizardServiceTest {
     @Autowired
     private ChartOfAccountRepository chartOfAccountRepository;
 
-    private static final UUID USER = UUID.randomUUID();
+    @Autowired
+    private AppUserRepository appUserRepository;
 
     // ---- Template: JUAL_BARANG_JASA ----
 
     @Test
     void jualTunai_debitKas_kreditPendapatan_danTersimpanKeDatabase() {
         JournalEntry je = wizardService.buatJurnal(
-                req("JUAL_BARANG_JASA", "150000", "CASH"), USER);
+                req("JUAL_BARANG_JASA", "150000", "CASH"), user());
 
         assertLine(je, akun(AccountResolver.KAS), "150000.00", "0");
         assertLine(je, akun(AccountResolver.PENDAPATAN_USAHA), "0", "150000.00");
@@ -67,7 +70,7 @@ class TransactionWizardServiceTest {
     @Test
     void jualKredit_receivable_debitPiutangUsaha() {
         JournalEntry je = wizardService.buatJurnal(
-                req("JUAL_BARANG_JASA", "250000", "RECEIVABLE"), USER);
+                req("JUAL_BARANG_JASA", "250000", "RECEIVABLE"), user());
 
         assertLine(je, akun(AccountResolver.PIUTANG_USAHA), "250000.00", "0");
         assertLine(je, akun(AccountResolver.PENDAPATAN_USAHA), "0", "250000.00");
@@ -78,7 +81,7 @@ class TransactionWizardServiceTest {
     @Test
     void terimaPembayaranTransfer_debitBank_kreditPiutang() {
         JournalEntry je = wizardService.buatJurnal(
-                req("TERIMA_PEMBAYARAN", "250000", "TRANSFER"), USER);
+                req("TERIMA_PEMBAYARAN", "250000", "TRANSFER"), user());
 
         assertLine(je, akun(AccountResolver.BANK), "250000.00", "0");
         assertLine(je, akun(AccountResolver.PIUTANG_USAHA), "0", "250000.00");
@@ -89,7 +92,7 @@ class TransactionWizardServiceTest {
     @Test
     void beliBahanKredit_payable_debitPersediaan_kreditHutang() {
         JournalEntry je = wizardService.buatJurnal(
-                req("BELI_BAHAN", "500000", "PAYABLE"), USER);
+                req("BELI_BAHAN", "500000", "PAYABLE"), user());
 
         assertLine(je, akun(AccountResolver.PERSEDIAAN), "500000.00", "0");
         assertLine(je, akun(AccountResolver.HUTANG_USAHA), "0", "500000.00");
@@ -98,7 +101,7 @@ class TransactionWizardServiceTest {
     @Test
     void beliBahanTunai_kreditKas() {
         JournalEntry je = wizardService.buatJurnal(
-                req("BELI_BAHAN", "75000", "CASH"), USER);
+                req("BELI_BAHAN", "75000", "CASH"), user());
 
         assertLine(je, akun(AccountResolver.PERSEDIAAN), "75000.00", "0");
         assertLine(je, akun(AccountResolver.KAS), "0", "75000.00");
@@ -109,7 +112,7 @@ class TransactionWizardServiceTest {
     @Test
     void bayarBiayaQris_debitBiayaOperasional_kreditBank() {
         JournalEntry je = wizardService.buatJurnal(
-                req("BAYAR_BIAYA", "120000.505", "QRIS"), USER);
+                req("BAYAR_BIAYA", "120000.505", "QRIS"), user());
 
         // pembulatan HALF_UP eksplisit (Aturan Emas #1): 120000.505 -> 120000.51
         assertLine(je, akun(AccountResolver.BIAYA_OPERASIONAL), "120000.51", "0");
@@ -121,7 +124,7 @@ class TransactionWizardServiceTest {
     @Test
     void setorKasPemilik_debitKas_kreditModal() {
         JournalEntry je = wizardService.buatJurnal(
-                req("SETOR_KAS_PEMILIK", "1000000", "CASH"), USER);
+                req("SETOR_KAS_PEMILIK", "1000000", "CASH"), user());
 
         assertLine(je, akun(AccountResolver.KAS), "1000000.00", "0");
         assertLine(je, akun(AccountResolver.MODAL_PEMILIK), "0", "1000000.00");
@@ -130,7 +133,7 @@ class TransactionWizardServiceTest {
     @Test
     void tarikKasPemilik_debitModal_kreditBank() {
         JournalEntry je = wizardService.buatJurnal(
-                req("TARIK_KAS_PEMILIK", "300000", "TRANSFER"), USER);
+                req("TARIK_KAS_PEMILIK", "300000", "TRANSFER"), user());
 
         assertLine(je, akun(AccountResolver.MODAL_PEMILIK), "300000.00", "0");
         assertLine(je, akun(AccountResolver.BANK), "0", "300000.00");
@@ -141,7 +144,7 @@ class TransactionWizardServiceTest {
     @Test
     void templateTidakDikenal_ditolak() {
         assertThatThrownBy(() -> wizardService.buatJurnal(
-                req("TEMPLATE_NGACO", "100000", "CASH"), USER))
+                req("TEMPLATE_NGACO", "100000", "CASH"), user()))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("TEMPLATE_NGACO");
     }
@@ -149,11 +152,11 @@ class TransactionWizardServiceTest {
     @Test
     void jumlahNolAtauNegatif_ditolak() {
         assertThatThrownBy(() -> wizardService.buatJurnal(
-                req("JUAL_BARANG_JASA", "0", "CASH"), USER))
+                req("JUAL_BARANG_JASA", "0", "CASH"), user()))
                 .isInstanceOf(IllegalArgumentException.class);
 
         assertThatThrownBy(() -> wizardService.buatJurnal(
-                req("BAYAR_BIAYA", "-5000", "CASH"), USER))
+                req("BAYAR_BIAYA", "-5000", "CASH"), user()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -162,7 +165,7 @@ class TransactionWizardServiceTest {
     @Test
     void jurnalPosted_tidakBisaDiubah_ditolakTriggerDatabase() {
         JournalEntry je = journalEntryRepository.saveAndFlush(
-                wizardService.buatJurnal(req("JUAL_BARANG_JASA", "100000", "CASH"), USER));
+                wizardService.buatJurnal(req("JUAL_BARANG_JASA", "100000", "CASH"), user()));
 
         // DRAFT -> POSTED masih diizinkan trigger (OLD.status belum POSTED)
         je.setStatus(JournalEntry.Status.POSTED);
@@ -177,6 +180,21 @@ class TransactionWizardServiceTest {
 
     private TransactionRequest req(String template, String jumlah, String metode) {
         return new TransactionRequest(template, new BigDecimal(jumlah), metode, LocalDate.of(2026, 7, 1));
+    }
+
+    /**
+     * journal_entry.created_by ber-FK ke app_user (V2) — createdBy harus
+     * user sungguhan, bukan UUID acak.
+     */
+    private UUID user() {
+        return appUserRepository.findByUsername("owner-uji").orElseGet(() -> {
+            AppUser u = new AppUser();
+            u.setUsername("owner-uji");
+            u.setPasswordHash("bukan-untuk-login");
+            u.setNama("Owner Uji");
+            u.setPeran(AppUser.PeranPengguna.OWNER);
+            return appUserRepository.save(u);
+        }).getId();
     }
 
     private UUID akun(String kodeAkun) {

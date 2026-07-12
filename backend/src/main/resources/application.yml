@@ -20,6 +20,12 @@ server:
 # Detail per-provider (base-url, api-key) diisi per instalasi klien via .env — lihat
 # artifacts/client-onboarding-checklist.md, jangan hardcode di sini.
 siaumkm:
+  security:
+    # SENGAJA tanpa nilai default: aplikasi harus gagal start bila JWT_SECRET
+    # tidak di-set (min. 32 karakter, unik per instalasi klien) — temuan
+    # KRITIS audit keamanan: default ter-commit = token bisa dipalsukan.
+    jwt-secret: ${JWT_SECRET}
+    jwt-expiry-minutes: ${JWT_EXPIRY_MINUTES:480}
   pjap:
     provider: ${PJAP_PROVIDER:}
     base-url: ${PJAP_BASE_URL:}
