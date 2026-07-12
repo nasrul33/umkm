@@ -116,6 +116,26 @@ class TransactionWizardServiceTest {
         assertLine(je, akun(AccountResolver.BANK), "0", "120000.51");
     }
 
+    // ---- Template: SETOR_KAS_PEMILIK / TARIK_KAS_PEMILIK ----
+
+    @Test
+    void setorKasPemilik_debitKas_kreditModal() {
+        JournalEntry je = wizardService.buatJurnal(
+                req("SETOR_KAS_PEMILIK", "1000000", "CASH"), USER);
+
+        assertLine(je, akun(AccountResolver.KAS), "1000000.00", "0");
+        assertLine(je, akun(AccountResolver.MODAL_PEMILIK), "0", "1000000.00");
+    }
+
+    @Test
+    void tarikKasPemilik_debitModal_kreditBank() {
+        JournalEntry je = wizardService.buatJurnal(
+                req("TARIK_KAS_PEMILIK", "300000", "TRANSFER"), USER);
+
+        assertLine(je, akun(AccountResolver.MODAL_PEMILIK), "300000.00", "0");
+        assertLine(je, akun(AccountResolver.BANK), "0", "300000.00");
+    }
+
     // ---- Kasus tepi ----
 
     @Test

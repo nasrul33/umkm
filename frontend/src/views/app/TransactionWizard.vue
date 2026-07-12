@@ -15,6 +15,14 @@
     <form v-else @submit.prevent="submit" class="bg-white rounded-lg p-6 shadow-sm">
       <p class="text-sm text-gray-500 mb-4">{{ template.labelAwam }}</p>
 
+      <template v-if="template.kode === 'SETOR_TARIK_KAS'">
+        <label class="block text-sm mb-1">Jenis</label>
+        <select v-model="arahKas" class="w-full border rounded px-3 py-2 mb-4">
+          <option value="SETOR">Setor uang pribadi ke usaha</option>
+          <option value="TARIK">Ambil uang usaha untuk pribadi</option>
+        </select>
+      </template>
+
       <label class="block text-sm mb-1">Jumlah (Rp)</label>
       <input v-model="jumlah" type="number" min="0" step="0.01"
              class="w-full border rounded px-3 py-2 mb-4" required />
@@ -55,8 +63,10 @@ const templates = [
   { kode: "JUAL_BARANG_JASA", labelAwam: "Jual Barang/Jasa", ikon: "🛍️" },
   { kode: "TERIMA_PEMBAYARAN", labelAwam: "Terima Pembayaran", ikon: "💰" },
   { kode: "BELI_BAHAN", labelAwam: "Beli Bahan/Barang", ikon: "📦" },
-  { kode: "BAYAR_BIAYA", labelAwam: "Bayar Biaya Operasional", ikon: "🧾" }
+  { kode: "BAYAR_BIAYA", labelAwam: "Bayar Biaya Operasional", ikon: "🧾" },
+  { kode: "SETOR_TARIK_KAS", labelAwam: "Setor/Tarik Kas Pemilik", ikon: "💼" }
 ];
+const arahKas = ref("SETOR");
 
 // Bahasa awam, bukan istilah akuntansi: "Belum dibayar" bukan "Piutang/Hutang".
 // Backend (JournalRuleMapper per template) yang menerjemahkan ke akun yang benar.
@@ -70,12 +80,19 @@ const metodeTersedia = computed(() => {
     return [...metodeDasar, { kode: "RECEIVABLE", label: "Belum dibayar (jual kredit)" }];
   if (template.value?.kode === "BELI_BAHAN")
     return [...metodeDasar, { kode: "PAYABLE", label: "Bayar nanti (beli kredit)" }];
+  if (template.value?.kode === "SETOR_TARIK_KAS")
+    return metodeDasar.filter((m) => m.kode !== "QRIS"); // setor/tarik modal: tunai atau transfer
   return metodeDasar;
 });
 
 async function submit() {
+  // Satu kartu wizard "Setor/Tarik Kas Pemilik" (BR-B3-01) dipecah menjadi dua
+  // kode template backend sesuai arah dana — masing-masing punya JournalRuleMapper.
+  const kodeTemplate = template.value.kode === "SETOR_TARIK_KAS"
+    ? (arahKas.value === "SETOR" ? "SETOR_KAS_PEMILIK" : "TARIK_KAS_PEMILIK")
+    : template.value.kode;
   await client.post("/app/transaksi", {
-    kodeTemplate: template.value.kode,
+    kodeTemplate,
     jumlah: jumlah.value,
     metodePembayaran: metodePembayaran.value,
     tanggal: tanggal.value

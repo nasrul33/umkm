@@ -17,6 +17,7 @@ public class AccountResolver {
     public static final String PIUTANG_USAHA     = "1200";
     public static final String PERSEDIAAN        = "1300";
     public static final String HUTANG_USAHA      = "2000";
+    public static final String MODAL_PEMILIK     = "3000";
     public static final String PENDAPATAN_USAHA  = "4000";
     public static final String BIAYA_OPERASIONAL = "5100";
 
