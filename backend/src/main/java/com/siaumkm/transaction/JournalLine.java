@@ -44,4 +44,6 @@ public class JournalLine {
     public BigDecimal getDebit() { return debit; }
     public BigDecimal getKredit() { return kredit; }
     public UUID getChartOfAccountId() { return chartOfAccountId; }
+    public UUID getProductId() { return productId; }
+    public void setProductId(UUID v) { this.productId = v; }
 }

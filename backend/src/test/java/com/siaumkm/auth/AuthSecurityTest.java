@@ -91,6 +91,15 @@ class AuthSecurityTest {
     }
 
     @Test
+    void reverseJurnal_staffDitolak403() {
+        // BR-B3-07 + NFR-10: hanya OWNER yang boleh membalik jurnal final —
+        // 403 dari method security, sebelum ID sempat dicari.
+        var resp = kirim(HttpMethod.POST, "/app/transaksi/" + java.util.UUID.randomUUID() + "/reverse",
+                token("staff@uji.id", "rahasia-staff"), null);
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
     void tokenNgawur_ditolak401() {
         var resp = kirim(HttpMethod.GET, "/app/master-data/products", "token.palsu.ngawur", null);
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);

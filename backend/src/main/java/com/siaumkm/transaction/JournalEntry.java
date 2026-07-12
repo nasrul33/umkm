@@ -73,6 +73,10 @@ public class JournalEntry {
     public MetodePembayaran getMetodePembayaran() { return metodePembayaran; }
     public void setMetodePembayaran(MetodePembayaran v) { this.metodePembayaran = v; }
     public void setCreatedBy(UUID v) { this.createdBy = v; }
+    public UUID getReversalOfId() { return reversalOfId; }
+    public void setReversalOfId(UUID v) { this.reversalOfId = v; }
+    public Instant getPostedAt() { return postedAt; }
+    public void setPostedAt(Instant v) { this.postedAt = v; }
 
     public void addLine(JournalLine line) {
         lines.add(line);

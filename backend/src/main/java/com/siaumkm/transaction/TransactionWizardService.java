@@ -1,7 +1,6 @@
 package com.siaumkm.transaction;
 
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,25 +32,7 @@ public class TransactionWizardService {
                 "tambahkan JournalRuleMapper baru, jangan hardcode di controller.");
         }
         JournalEntry je = mapper.map(request, createdBy);
-        validateBalance(je);
+        JournalValidator.validateBalance(je);
         return je;
-    }
-
-    /**
-     * SRS-B3-01 wajib: setiap jurnal harus balance (total debit = total kredit)
-     * SEBELUM insert — validasi ini adalah lapisan pertama, trigger database
-     * (prevent_update_posted_journal) adalah lapisan kedua untuk immutability
-     * setelah POSTED, bukan pengganti validasi balance ini.
-     */
-    private void validateBalance(JournalEntry je) {
-        BigDecimal totalDebit = je.getLines().stream()
-                .map(JournalLine::getDebit).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalKredit = je.getLines().stream()
-                .map(JournalLine::getKredit).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (totalDebit.compareTo(totalKredit) != 0) {
-            throw new IllegalStateException(
-                "Jurnal tidak balance: debit=" + totalDebit + " kredit=" + totalKredit);
-        }
     }
 }
