@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: sia-umkm-premium
+  datasource:
+    url: jdbc:postgresql://localhost:5432/siaumkm
+    username: ${DB_USER:siaumkm}
+    password: ${DB_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: validate   # skema dikelola Flyway, JANGAN pakai update/create-drop
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+# NFR-09: konfigurasi retry bawaan Spring Boot 4.1 untuk panggilan ke API PJAP mitra.
+# Detail per-provider (base-url, api-key) diisi per instalasi klien via .env — lihat
+# artifacts/client-onboarding-checklist.md, jangan hardcode di sini.
+siaumkm:
+  pjap:
+    provider: ${PJAP_PROVIDER:}
+    base-url: ${PJAP_BASE_URL:}
+    api-key: ${PJAP_API_KEY:}
+    retry:
+      max-attempts: 3
+      backoff-ms: 2000
+
+logging:
+  level:
+    com.siaumkm: INFO

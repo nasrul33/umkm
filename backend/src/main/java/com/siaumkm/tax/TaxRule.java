@@ -1,0 +1,61 @@
+package com.siaumkm.tax;
+
+import com.siaumkm.identity.BusinessEntity.BentukBadanUsaha;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * SRS-B5-01: parameter pajak effective-dated. TIDAK PERNAH hardcode tarif di Java —
+ * lihat CLAUDE.md Aturan Emas #3. Regulasi pajak UMKM sudah berubah 2x dalam 12
+ * bulan terakhir (PP 55/2022 → PP 20/2026); desain ini mengantisipasi perubahan
+ * berikutnya tanpa perlu redeploy kode.
+ */
+@Entity
+@Table(name = "tax_rule")
+public class TaxRule {
+
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(name = "kode_aturan", nullable = false, length = 50)
+    private String kodeAturan;
+
+    private String deskripsi;
+
+    @Column(name = "tarif_persen", nullable = false, precision = 6, scale = 4)
+    private BigDecimal tarifPersen;
+
+    @Column(name = "ambang_bawah", precision = 19, scale = 2)
+    private BigDecimal ambangBawah;
+
+    @Column(name = "ambang_atas", precision = 19, scale = 2)
+    private BigDecimal ambangAtas;
+
+    @ElementCollection(targetClass = BentukBadanUsaha.class)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bentuk_badan_berlaku")
+    private List<BentukBadanUsaha> bentukBadanBerlaku;
+
+    @Column(name = "berlaku_dari", nullable = false)
+    private LocalDate berlakuDari;
+
+    @Column(name = "berlaku_sampai")
+    private LocalDate berlakuSampai; // NULL = masih berlaku
+
+    @Column(name = "regulasi_acuan", nullable = false, length = 200)
+    private String regulasiAcuan;
+
+    // getters
+    public String getKodeAturan() { return kodeAturan; }
+    public BigDecimal getTarifPersen() { return tarifPersen; }
+    public BigDecimal getAmbangBawah() { return ambangBawah; }
+    public BigDecimal getAmbangAtas() { return ambangAtas; }
+    public List<BentukBadanUsaha> getBentukBadanBerlaku() { return bentukBadanBerlaku; }
+    public LocalDate getBerlakuDari() { return berlakuDari; }
+    public LocalDate getBerlakuSampai() { return berlakuSampai; }
+    public String getRegulasiAcuan() { return regulasiAcuan; }
+}
