@@ -20,6 +20,10 @@ server:
 # Detail per-provider (base-url, api-key) diisi per instalasi klien via .env — lihat
 # artifacts/client-onboarding-checklist.md, jangan hardcode di sini.
 siaumkm:
+  tax:
+    # Rasio peringatan ambang omzet (BR-B5-03). Parameter monitoring PRODUK,
+    # bukan parameter regulasi — karenanya di sini, BUKAN di tabel tax_rule.
+    omzet-warning-ratio: ${OMZET_WARNING_RATIO:0.80}
   security:
     # SENGAJA tanpa nilai default: aplikasi harus gagal start bila JWT_SECRET
     # tidak di-set (min. 32 karakter, unik per instalasi klien) — temuan

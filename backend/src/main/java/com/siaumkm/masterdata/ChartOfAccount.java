@@ -33,12 +33,20 @@ public class ChartOfAccount {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+    // SRS-B5-02: hanya akun pendapatan ber-flag ini yang masuk peredaran bruto
+    // agregasi omzet — pendapatan yang dikenai PPh final tersendiri (bunga,
+    // sewa 4(2)) atau pekerjaan bebas wajib FALSE (PMK 168/2023).
+    @Column(name = "is_omzet_usaha", nullable = false)
+    private boolean isOmzetUsaha = true;
+
     public UUID getId() { return id; }
     public String getKodeAkun() { return kodeAkun; }
     public String getNamaAkun() { return namaAkun; }
     public TipeAkun getTipe() { return tipe; }
     public PerilakuBiaya getCostBehavior() { return costBehavior; }
     public void setCostBehavior(PerilakuBiaya v) { this.costBehavior = v; }
+    public boolean isOmzetUsaha() { return isOmzetUsaha; }
+    public void setOmzetUsaha(boolean v) { this.isOmzetUsaha = v; }
 
     public enum TipeAkun { ASET, KEWAJIBAN, MODAL, PENDAPATAN, BEBAN }
     public enum PerilakuBiaya { FIXED, VARIABLE }
