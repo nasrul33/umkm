@@ -37,7 +37,11 @@ public class JournalPostingService {
         }
         je.setStatus(JournalEntry.Status.POSTED);
         je.setPostedAt(Instant.now());
-        return journalEntryRepository.save(je);
+        JournalEntry saved = journalEntryRepository.save(je);
+        // open-in-view=false: inisialisasi lines di dalam transaksi agar
+        // respons JSON controller tidak gagal LazyInitialization.
+        saved.getLines().size();
+        return saved;
     }
 
     @Transactional
