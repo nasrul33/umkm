@@ -21,9 +21,7 @@
 
       <label class="block text-sm mb-1">Bayar dengan</label>
       <select v-model="metodePembayaran" class="w-full border rounded px-3 py-2 mb-4">
-        <option value="CASH">Tunai</option>
-        <option value="TRANSFER">Transfer Bank</option>
-        <option value="QRIS">QRIS</option>
+        <option v-for="m in metodeTersedia" :key="m.kode" :value="m.kode">{{ m.label }}</option>
       </select>
 
       <label class="block text-sm mb-1">Tanggal</label>
@@ -40,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import client from "../../api/client";
 
@@ -59,6 +57,21 @@ const templates = [
   { kode: "BELI_BAHAN", labelAwam: "Beli Bahan/Barang", ikon: "📦" },
   { kode: "BAYAR_BIAYA", labelAwam: "Bayar Biaya Operasional", ikon: "🧾" }
 ];
+
+// Bahasa awam, bukan istilah akuntansi: "Belum dibayar" bukan "Piutang/Hutang".
+// Backend (JournalRuleMapper per template) yang menerjemahkan ke akun yang benar.
+const metodeDasar = [
+  { kode: "CASH", label: "Tunai" },
+  { kode: "TRANSFER", label: "Transfer Bank" },
+  { kode: "QRIS", label: "QRIS" }
+];
+const metodeTersedia = computed(() => {
+  if (template.value?.kode === "JUAL_BARANG_JASA")
+    return [...metodeDasar, { kode: "RECEIVABLE", label: "Belum dibayar (jual kredit)" }];
+  if (template.value?.kode === "BELI_BAHAN")
+    return [...metodeDasar, { kode: "PAYABLE", label: "Bayar nanti (beli kredit)" }];
+  return metodeDasar;
+});
 
 async function submit() {
   await client.post("/app/transaksi", {

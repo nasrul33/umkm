@@ -2,38 +2,37 @@ package com.siaumkm.transaction;
 
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * SRS-B3-01: menerjemahkan wizard bahasa awam ("Jual Barang/Jasa", dst.) menjadi
- * jurnal double-entry. Setiap template punya strategi pemetaan akun sendiri —
- * jangan taruh if/else raksasa di sini; tambah TransactionTemplate baru = tambah
- * implementasi JournalRuleMapper baru, bukan menambah cabang kondisional.
+ * jurnal double-entry. Setiap template punya JournalRuleMapper sendiri yang
+ * ditemukan otomatis via Spring — menambah template baru = menambah @Component
+ * baru, BUKAN menambah cabang kondisional di sini.
  *
  * Lihat CLAUDE.md Aturan Emas #1: BigDecimal + RoundingMode eksplisit, selalu.
  */
 @Service
 public class TransactionWizardService {
 
-    /**
-     * Contoh implementasi untuk template "JUAL_BARANG_JASA".
-     * Debit: Kas/Bank (sesuai metode pembayaran) — Kredit: Pendapatan Usaha.
-     */
-    public JournalEntry buatJurnalPenjualan(UUID kasAccountId, UUID pendapatanAccountId,
-                                             BigDecimal jumlah, LocalDate tanggal, UUID createdBy) {
-        BigDecimal jumlahBersih = jumlah.setScale(2, RoundingMode.HALF_UP);
+    private final Map<String, JournalRuleMapper> mappers;
 
-        JournalEntry je = new JournalEntry();
-        je.setNomorJurnal(generateNomorJurnal());
-        je.setTanggalTransaksi(tanggal);
-        je.setKeterangan("Jual Barang/Jasa");
-        je.setCreatedBy(createdBy);
+    public TransactionWizardService(List<JournalRuleMapper> mapperList) {
+        this.mappers = mapperList.stream()
+                .collect(Collectors.toUnmodifiableMap(JournalRuleMapper::kodeTemplate, m -> m));
+    }
 
-        je.addLine(new JournalLine(kasAccountId, jumlahBersih, BigDecimal.ZERO));
-        je.addLine(new JournalLine(pendapatanAccountId, BigDecimal.ZERO, jumlahBersih));
-
+    public JournalEntry buatJurnal(TransactionRequest request, UUID createdBy) {
+        JournalRuleMapper mapper = mappers.get(request.kodeTemplate());
+        if (mapper == null) {
+            throw new UnsupportedOperationException(
+                "Template " + request.kodeTemplate() + " belum diimplementasikan — " +
+                "tambahkan JournalRuleMapper baru, jangan hardcode di controller.");
+        }
+        JournalEntry je = mapper.map(request, createdBy);
         validateBalance(je);
         return je;
     }
@@ -54,9 +53,5 @@ public class TransactionWizardService {
             throw new IllegalStateException(
                 "Jurnal tidak balance: debit=" + totalDebit + " kredit=" + totalKredit);
         }
-    }
-
-    private String generateNomorJurnal() {
-        return "JU-" + System.currentTimeMillis();
     }
 }

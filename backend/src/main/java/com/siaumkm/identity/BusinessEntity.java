@@ -2,6 +2,8 @@ package com.siaumkm.identity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.validation.constraints.Pattern;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,8 +42,11 @@ public class BusinessEntity {
     @Column(name = "nib", length = 20)
     private String nib;
 
+    // NAMED_ENUM: kolom PG bertipe enum bernama (bentuk_badan_usaha) —
+    // tanpa ini Hibernate mengikat parameter sebagai varchar dan PG menolak.
     @NotNull
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "bentuk_badan", nullable = false)
     private BentukBadanUsaha bentukBadan;
 
@@ -61,6 +66,7 @@ public class BusinessEntity {
     private String alamatDomisili;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status_transisi_pajak", nullable = false)
     private StatusTransisiPajak statusTransisiPajak = StatusTransisiPajak.NONE;
 

@@ -1,6 +1,8 @@
 package com.siaumkm.masterdata;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 
 /** SRS-B2-01: seed standar UMKM via Flyway (lihat V1__init_schema.sql). */
@@ -16,11 +18,15 @@ public class ChartOfAccount {
     @Column(name = "nama_akun", nullable = false)
     private String namaAkun;
 
+    // NAMED_ENUM: kolom PG bertipe enum bernama (tipe_akun/perilaku_biaya) —
+    // tanpa ini Hibernate mengikat parameter sebagai varchar dan PG menolak.
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private TipeAkun tipe;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "cost_behavior")
     private PerilakuBiaya costBehavior; // SRS-B6-02: klasifikasi FIXED/VARIABLE utk BEP
 

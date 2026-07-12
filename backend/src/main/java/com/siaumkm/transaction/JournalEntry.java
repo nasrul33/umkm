@@ -1,6 +1,8 @@
 package com.siaumkm.transaction;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,9 +30,17 @@ public class JournalEntry {
 
     private String keterangan;
 
+    // NAMED_ENUM: kolom PostgreSQL bertipe enum bernama (status_jurnal) —
+    // tanpa ini Hibernate mengikat parameter sebagai varchar dan PG menolak.
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status", nullable = false)
     private Status status = Status.DRAFT;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "metode_pembayaran")
+    private MetodePembayaran metodePembayaran;
 
     @Column(name = "reversal_of_id")
     private UUID reversalOfId;
@@ -58,7 +68,10 @@ public class JournalEntry {
     public List<JournalLine> getLines() { return lines; }
     public void setTanggalTransaksi(LocalDate v) { this.tanggalTransaksi = v; }
     public LocalDate getTanggalTransaksi() { return tanggalTransaksi; }
+    public String getKeterangan() { return keterangan; }
     public void setKeterangan(String v) { this.keterangan = v; }
+    public MetodePembayaran getMetodePembayaran() { return metodePembayaran; }
+    public void setMetodePembayaran(MetodePembayaran v) { this.metodePembayaran = v; }
     public void setCreatedBy(UUID v) { this.createdBy = v; }
 
     public void addLine(JournalLine line) {
