@@ -28,6 +28,18 @@ Setiap perubahan tarif/ambang batas pajak WAJIB dicatat di sini sebelum atau ber
 
 ---
 
+## Rumus DPP bulan penembusan Rp500 juta — 13 Juli 2026 (V8: koreksi TaxCalculationEngine)
+
+- **Regulasi acuan**: PP 55/2022 Pasal 60 jo. PMK 164/2023 (dipertahankan PP 20/2026): tarif 0,5% hanya dikenakan atas bagian peredaran bruto di atas Rp500 juta.
+- **Perubahan**: (a) rumus engine dikoreksi — sebelumnya bulan penembusan dikenai pajak atas omzet bulan PENUH (over-tax); kini DPP = max(0, min(omzet bulan, kumulatif-sesudah − Rp500 jt)); semantik `omzetKumulatifTahunan` dikunci = kumulatif SESUDAH bulan berjalan; DPP tidak pernah negatif; (b) kolom `tax_calculation_log.omzet_kena_pajak` (DPP eksplisit, auditable) + index masa + trigger append-only & audit hash-chain; (c) `PphMasaService` (BR-B5-01): kalkulasi masa end-to-end dari pembukuan via `OmzetUsahaQuery` (definisi omzet SATU dengan agregasi Pasal 58), jadwal finalisasi masa T di awal T+1, entri `tax_calendar` jatuh tempo setor-sendiri tanggal 15 bulan berikutnya (configurable).
+- **Berlaku dari tanggal**: berlaku untuk semua kalkulasi baru (rumus historis PP 55/2022 memang sama — koreksi bug, bukan perubahan aturan).
+- **Baris tax_rule terdampak**: tidak ada (perubahan rumus/kolom log, parameter tetap).
+- **Test yang diperbarui/ditambahkan**: `TaxCalculationEngineTest#bulanPenembusan500jt_hanyaKelebihanYangKenaPajak`, `#kumulatifTepatRp500jt_belumKenaPajak`, `#bulanPertamaLangsungMelewatiAmbang_dppSebesarKelebihan`, `#omzetBulanNegatif_tidakPernahPajakNegatif`, seluruh `PphMasaServiceTest` (7 test).
+- **Dampak retroaktif**: kalkulasi ulang bulan penembusan menghasilkan angka lebih kecil yang BENAR; baris `tax_calculation_log` lama tidak diubah (append-only). **Limitation**: koreksi/pembalik lintas masa di-netting ke masa berjalan dengan DPP di-floor 0 — kaidah resmi pembetulan masa asal (pemindahbukuan) tidak diotomasi.
+- **Dicatat oleh**: Claude Code (konsultasi tax-compliance-specialist, sumber PMK 164/2023 via Pajakku/DDTC/DJP)
+
+---
+
 ## PPH-FINAL-UMKM-KOPERASI — 13 Juli 2026 (V7-b: batas waktu koperasi PP 20/2026)
 
 - **Regulasi acuan**: PP 20/2026 (ditetapkan & diundangkan 22 April 2026): koperasi paling lama 4 tahun pajak sejak terdaftar (inklusif tahun terdaftar); koperasi yang terdaftar sebelum PP berlaku memakai masa transisi s.d. Tahun Pajak 2029. OP dan PT Perorangan tetap tanpa batas waktu.

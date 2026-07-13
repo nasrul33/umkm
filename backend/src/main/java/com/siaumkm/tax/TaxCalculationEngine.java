@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * SRS-B5-01..03: mesin kalkulasi PPh Final. Contoh implementasi untuk WP OP
@@ -27,7 +28,8 @@ public class TaxCalculationEngine {
         this.taxRuleRepository = taxRuleRepository;
     }
 
-    public record HasilKalkulasi(BigDecimal omzetKenaPajak, BigDecimal pajakTerhitung, String regulasiAcuan) {}
+    public record HasilKalkulasi(BigDecimal omzetKenaPajak, BigDecimal pajakTerhitung,
+                                  String regulasiAcuan, UUID taxRuleId) {}
 
     /** Kompatibilitas untuk bentuk badan tanpa batas waktu (OP/PT Perorangan). */
     public HasilKalkulasi hitungPphFinal(BentukBadanUsaha bentukBadan,
@@ -39,9 +41,9 @@ public class TaxCalculationEngine {
     }
 
     /**
-     * @param omzetBrutoBulanan omzet BULAN INI (bukan kumulatif tahunan — kumulatif
-     *                          dihitung oleh caller/OmzetAggregationJob untuk cek ambang)
-     * @param omzetKumulatifTahunan omzet kumulatif tahun berjalan, untuk cek pengecualian Rp500jt (khusus OP)
+     * @param omzetBrutoBulanan omzet BULAN INI (bukan kumulatif tahunan)
+     * @param omzetKumulatifTahunan kumulatif tahun berjalan SESUDAH menambahkan
+     *        bulan berjalan — dasar rumus pengecualian Rp500jt (khusus OP)
      * @param tanggalTerdaftarPajak wajib bila aturan bentuk badan punya batas_tahun_pajak (koperasi)
      */
     public HasilKalkulasi hitungPphFinal(BentukBadanUsaha bentukBadan,
@@ -66,20 +68,25 @@ public class TaxCalculationEngine {
 
         validasiBatasWaktu(rule, tanggalTransaksi, tanggalTerdaftarPajak);
 
-        BigDecimal omzetKenaPajak = omzetBrutoBulanan;
-
-        // Pengecualian omzet s.d. Rp500jt/tahun khusus WP OP (SRS-B5-02)
-        if (bentukBadan == BentukBadanUsaha.OP && rule.getAmbangBawah() != null) {
-            if (omzetKumulatifTahunan.compareTo(rule.getAmbangBawah()) <= 0) {
-                return new HasilKalkulasi(BigDecimal.ZERO, BigDecimal.ZERO, rule.getRegulasiAcuan());
-            }
+        // PP 55/2022 Pasal 60 jo. PMK 164/2023 (dipertahankan PP 20/2026):
+        // tarif hanya dikenakan atas BAGIAN peredaran bruto di atas pengecualian
+        // (Rp500jt utk OP). Di bulan penembusan, DPP = kelebihan kumulatif di
+        // atas ambang, dibatasi omzet bulan berjalan. DPP tidak pernah negatif
+        // (pembalik lintas bulan tidak menghasilkan pajak negatif — koreksi masa
+        // asal adalah proses pembetulan terpisah, lihat changelog limitation).
+        BigDecimal omzetKenaPajak;
+        if (rule.getAmbangBawah() != null) {
+            BigDecimal kelebihan = omzetKumulatifTahunan.subtract(rule.getAmbangBawah());
+            omzetKenaPajak = omzetBrutoBulanan.min(kelebihan).max(BigDecimal.ZERO);
+        } else {
+            omzetKenaPajak = omzetBrutoBulanan.max(BigDecimal.ZERO);
         }
 
         BigDecimal pajak = omzetKenaPajak
                 .multiply(rule.getTarifPersen())
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        return new HasilKalkulasi(omzetKenaPajak, pajak, rule.getRegulasiAcuan());
+        return new HasilKalkulasi(omzetKenaPajak, pajak, rule.getRegulasiAcuan(), rule.getId());
     }
 
     /**

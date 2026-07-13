@@ -47,17 +47,20 @@ public class OmzetAggregationService {
                                  String keterangan) {}
 
     private final JdbcTemplate jdbcTemplate;
+    private final OmzetUsahaQuery omzetUsahaQuery;
     private final BusinessEntityRepository businessEntityRepository;
     private final RelatedEntityRepository relatedEntityRepository;
     private final TaxRuleRepository taxRuleRepository;
     private final BigDecimal warningRatio;
 
     public OmzetAggregationService(JdbcTemplate jdbcTemplate,
+                                   OmzetUsahaQuery omzetUsahaQuery,
                                    BusinessEntityRepository businessEntityRepository,
                                    RelatedEntityRepository relatedEntityRepository,
                                    TaxRuleRepository taxRuleRepository,
                                    @Value("${siaumkm.tax.omzet-warning-ratio:0.80}") BigDecimal warningRatio) {
         this.jdbcTemplate = jdbcTemplate;
+        this.omzetUsahaQuery = omzetUsahaQuery;
         this.businessEntityRepository = businessEntityRepository;
         this.relatedEntityRepository = relatedEntityRepository;
         this.taxRuleRepository = taxRuleRepository;
@@ -96,18 +99,7 @@ public class OmzetAggregationService {
     }
 
     private BigDecimal omzetUsahaTahun(int tahun) {
-        BigDecimal hasil = jdbcTemplate.queryForObject("""
-            SELECT COALESCE(SUM(jl.kredit - jl.debit), 0)
-            FROM journal_line jl
-            JOIN chart_of_account coa ON coa.id = jl.chart_of_account_id
-            JOIN journal_entry je ON je.id = jl.journal_entry_id
-            WHERE coa.tipe = 'PENDAPATAN'
-              AND coa.is_omzet_usaha
-              AND je.status = 'POSTED'
-              AND je.tanggal_transaksi >= ? AND je.tanggal_transaksi < ?
-            """, BigDecimal.class,
-            LocalDate.of(tahun, 1, 1), LocalDate.of(tahun + 1, 1, 1));
-        return hasil.setScale(2, RoundingMode.HALF_UP);
+        return omzetUsahaQuery.hitung(LocalDate.of(tahun, 1, 1), LocalDate.of(tahun + 1, 1, 1));
     }
 
     private BigDecimal omzetEntitasTerkait(UUID businessEntityId) {

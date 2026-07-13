@@ -24,6 +24,9 @@ siaumkm:
     # Rasio peringatan ambang omzet (BR-B5-03). Parameter monitoring PRODUK,
     # bukan parameter regulasi — karenanya di sini, BUKAN di tabel tax_rule.
     omzet-warning-ratio: ${OMZET_WARNING_RATIO:0.80}
+    # Hari jatuh tempo setor-sendiri PPh Final masa (tanggal 15 bulan
+    # berikutnya per PMK 164/2023) — dipakai entri tax_calendar.
+    jatuh-tempo-setor-hari: ${JATUH_TEMPO_SETOR_HARI:15}
   security:
     # SENGAJA tanpa nilai default: aplikasi harus gagal start bila JWT_SECRET
     # tidak di-set (min. 32 karakter, unik per instalasi klien) — temuan

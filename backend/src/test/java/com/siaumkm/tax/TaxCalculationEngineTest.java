@@ -69,6 +69,56 @@ class TaxCalculationEngineTest {
         assertThat(hasil.regulasiAcuan()).isEqualTo("PP 20/2026");
     }
 
+    @Test
+    void bulanPenembusan500jt_hanyaKelebihanYangKenaPajak() {
+        // PMK 164/2023: kumulatif sesudah bulan ini 550jt, ambang 500jt ->
+        // DPP = min(omzet bulan 100jt, kelebihan 50jt) = 50jt
+        var hasil = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("100000000"),
+                new BigDecimal("550000000"),
+                LocalDate.of(2026, 7, 1));
+
+        assertThat(hasil.omzetKenaPajak()).isEqualByComparingTo(new BigDecimal("50000000"));
+        assertThat(hasil.pajakTerhitung()).isEqualByComparingTo(new BigDecimal("250000.00"));
+    }
+
+    @Test
+    void kumulatifTepatRp500jt_belumKenaPajak() {
+        // "sampai dengan Rp500 juta" inklusif — kelebihan 0
+        var hasil = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("100000000"),
+                new BigDecimal("500000000"),
+                LocalDate.of(2026, 7, 1));
+
+        assertThat(hasil.pajakTerhitung()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void bulanPertamaLangsungMelewatiAmbang_dppSebesarKelebihan() {
+        var hasil = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("600000000"),
+                new BigDecimal("600000000"),
+                LocalDate.of(2026, 7, 1));
+
+        assertThat(hasil.omzetKenaPajak()).isEqualByComparingTo(new BigDecimal("100000000"));
+        assertThat(hasil.pajakTerhitung()).isEqualByComparingTo(new BigDecimal("500000.00"));
+    }
+
+    @Test
+    void omzetBulanNegatif_tidakPernahPajakNegatif() {
+        var hasil = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("-50000000"),
+                new BigDecimal("700000000"),
+                LocalDate.of(2026, 7, 1));
+
+        assertThat(hasil.omzetKenaPajak()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(hasil.pajakTerhitung()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
     // ---- Rezim PP 55/2022 (2022-12-20 s.d. 2026-04-21) — backfill V7 ----
 
     @Test

@@ -64,6 +64,7 @@ public class TaxRule {
     private String regulasiAcuan;
 
     // getters
+    public UUID getId() { return id; }
     public String getKodeAturan() { return kodeAturan; }
     public BigDecimal getTarifPersen() { return tarifPersen; }
     public BigDecimal getAmbangBawah() { return ambangBawah; }
