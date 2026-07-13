@@ -39,6 +39,17 @@ public class ChartOfAccount {
     @Column(name = "is_omzet_usaha", nullable = false)
     private boolean isOmzetUsaha = true;
 
+    // BR-B4-03: akun kas/setara kas (dasar laporan arus kas & saldo kas
+    // dashboard) — single source of truth, bukan hardcode kode 1000/1100.
+    @Column(name = "is_kas_setara_kas", nullable = false)
+    private boolean isKasSetaraKas = false;
+
+    // Klasifikasi arus kas akun NON-kas (CHECK V10: wajib salah satu).
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "cash_flow_category")
+    private KategoriArusKas cashFlowCategory;
+
     public UUID getId() { return id; }
     public String getKodeAkun() { return kodeAkun; }
     public String getNamaAkun() { return namaAkun; }
@@ -47,7 +58,12 @@ public class ChartOfAccount {
     public void setCostBehavior(PerilakuBiaya v) { this.costBehavior = v; }
     public boolean isOmzetUsaha() { return isOmzetUsaha; }
     public void setOmzetUsaha(boolean v) { this.isOmzetUsaha = v; }
+    public boolean isKasSetaraKas() { return isKasSetaraKas; }
+    public void setKasSetaraKas(boolean v) { this.isKasSetaraKas = v; }
+    public KategoriArusKas getCashFlowCategory() { return cashFlowCategory; }
+    public void setCashFlowCategory(KategoriArusKas v) { this.cashFlowCategory = v; }
 
     public enum TipeAkun { ASET, KEWAJIBAN, MODAL, PENDAPATAN, BEBAN }
     public enum PerilakuBiaya { FIXED, VARIABLE }
+    public enum KategoriArusKas { OPERASI, INVESTASI, PENDANAAN }
 }

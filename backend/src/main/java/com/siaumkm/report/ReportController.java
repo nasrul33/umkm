@@ -3,6 +3,7 @@ package com.siaumkm.report;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
@@ -36,5 +37,19 @@ public class ReportController {
     @GetMapping("/income-statement")
     public List<AccountBalanceRow> incomeStatement() {
         return reportService.getIncomeStatement();
+    }
+
+    /** BR-B4-03: laporan arus kas (metode langsung) per tahun. */
+    @GetMapping("/cash-flow")
+    public FinancialReportService.CashFlowReport cashFlow(
+            @RequestParam(required = false) Integer tahun) {
+        return reportService.getCashFlow(tahun != null ? tahun : java.time.LocalDate.now().getYear());
+    }
+
+    /** BR-B4-04: laporan perubahan modal (SAK EMKM) per tahun. */
+    @GetMapping("/equity-change")
+    public FinancialReportService.EquityChangeReport equityChange(
+            @RequestParam(required = false) Integer tahun) {
+        return reportService.getEquityChange(tahun != null ? tahun : java.time.LocalDate.now().getYear());
     }
 }

@@ -131,11 +131,12 @@ class TransactionWizardServiceTest {
     }
 
     @Test
-    void tarikKasPemilik_debitModal_kreditBank() {
+    void tarikKasPemilik_debitPrive_kreditBank() {
         JournalEntry je = wizardService.buatJurnal(
                 req("TARIK_KAS_PEMILIK", "300000", "TRANSFER"), user());
 
-        assertLine(je, akun(AccountResolver.MODAL_PEMILIK), "300000.00", "0");
+        // Prive (3100) terpisah dari Modal (3000) — lihat BR-B4-04
+        assertLine(je, akun(AccountResolver.PRIVE), "300000.00", "0");
         assertLine(je, akun(AccountResolver.BANK), "0", "300000.00");
     }
 
