@@ -30,4 +30,12 @@ public class OmzetAggregationController {
                 : LocalDate.now(OmzetAggregationJob.ZONA_WIB).getYear();
         return ResponseEntity.ok(aggregationService.hitungUlang(tahunEfektif));
     }
+
+    /** Hasil tersimpan terakhir (read murni, tanpa hitung ulang) — utk dashboard. */
+    @GetMapping("/latest")
+    public ResponseEntity<HasilAgregasi> latest() {
+        return aggregationService.hasilTerakhir()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

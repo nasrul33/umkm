@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* NFR-01: lapisan visual premium bersama — bukan komponen template generik.
+   Warna brand selalu via CSS variable brand_theme (SRS-A-06). */
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-slate-200/60
+           shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.08)];
+  }
+  .card-accent {
+    @apply card border-t-2;
+    border-top-color: var(--brand-secondary, #8A6D3B);
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+           text-sm font-medium text-white bg-brand-primary
+           transition-all duration-150 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+           hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply btn-primary bg-brand-secondary;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+           text-sm font-medium border border-slate-300 text-slate-700 bg-white
+           transition-all duration-150 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2
+           hover:bg-slate-50 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .angka {
+    @apply font-medium tabular-nums;
+  }
+  .angka-hero {
+    @apply font-display text-3xl tabular-nums;
+  }
+}

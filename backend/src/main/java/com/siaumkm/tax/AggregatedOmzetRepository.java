@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface AggregatedOmzetRepository extends JpaRepository<AggregatedOmzet, UUID> {
     Optional<AggregatedOmzet> findByBusinessEntityIdAndPeriodeTahun(UUID businessEntityId, Integer periodeTahun);
+    Optional<AggregatedOmzet> findFirstByBusinessEntityIdOrderByCalculatedAtDesc(UUID businessEntityId);
 }

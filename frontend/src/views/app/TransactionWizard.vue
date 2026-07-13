@@ -1,5 +1,5 @@
 <template>
-  <main class="min-h-screen bg-gray-50 font-body p-8 max-w-lg mx-auto">
+  <main class="max-w-lg">
     <h1 class="font-display text-2xl mb-6">Catat Transaksi</h1>
 
     <!-- SRS-B3-01: pilihan wizard SELALU bahasa awam, bukan istilah akuntansi.

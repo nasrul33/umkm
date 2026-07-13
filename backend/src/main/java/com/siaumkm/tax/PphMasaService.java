@@ -29,7 +29,8 @@ public class PphMasaService {
                              BigDecimal omzetKenaPajak,
                              BigDecimal pajakTerhitung,
                              String regulasiAcuan,
-                             LocalDate jatuhTempoSetor) {}
+                             LocalDate jatuhTempoSetor,
+                             UUID taxCalculationLogId) {} // path param tombol "Buat Kode Billing"
 
     private final OmzetUsahaQuery omzetUsahaQuery;
     private final TaxCalculationEngine engine;
@@ -82,14 +83,15 @@ public class PphMasaService {
         var hasil = engine.hitungPphFinal(utama.getBentukBadan(), omzetBulan,
                 omzetKumulatif, akhirMasa, utama.getTanggalTerdaftarPajak());
 
-        logRepository.save(new TaxCalculationLog(businessEntityId, bulan, tahun,
+        TaxCalculationLog log = logRepository.save(new TaxCalculationLog(businessEntityId, bulan, tahun,
                 omzetBulan, hasil.omzetKenaPajak(), hasil.taxRuleId(), hasil.pajakTerhitung()));
 
         LocalDate jatuhTempo = awalMasaBerikut.withDayOfMonth(jatuhTempoHari);
         pastikanKalender(businessEntityId, tahun, bulan, jatuhTempo);
 
         return new HasilMasa(tahun, bulan, omzetBulan, omzetKumulatif,
-                hasil.omzetKenaPajak(), hasil.pajakTerhitung(), hasil.regulasiAcuan(), jatuhTempo);
+                hasil.omzetKenaPajak(), hasil.pajakTerhitung(), hasil.regulasiAcuan(), jatuhTempo,
+                log.getId());
     }
 
     /** BR-B5-09: entri kalender kepatuhan per masa, idempoten. */

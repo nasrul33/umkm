@@ -51,6 +51,7 @@ public class OmzetAggregationService {
     private final BusinessEntityRepository businessEntityRepository;
     private final RelatedEntityRepository relatedEntityRepository;
     private final TaxRuleRepository taxRuleRepository;
+    private final AggregatedOmzetRepository aggregatedOmzetRepository;
     private final BigDecimal warningRatio;
 
     public OmzetAggregationService(JdbcTemplate jdbcTemplate,
@@ -58,13 +59,35 @@ public class OmzetAggregationService {
                                    BusinessEntityRepository businessEntityRepository,
                                    RelatedEntityRepository relatedEntityRepository,
                                    TaxRuleRepository taxRuleRepository,
+                                   AggregatedOmzetRepository aggregatedOmzetRepository,
                                    @Value("${siaumkm.tax.omzet-warning-ratio:0.80}") BigDecimal warningRatio) {
         this.jdbcTemplate = jdbcTemplate;
         this.omzetUsahaQuery = omzetUsahaQuery;
         this.businessEntityRepository = businessEntityRepository;
         this.relatedEntityRepository = relatedEntityRepository;
         this.taxRuleRepository = taxRuleRepository;
+        this.aggregatedOmzetRepository = aggregatedOmzetRepository;
         this.warningRatio = warningRatio;
+    }
+
+    /**
+     * Hasil tersimpan TERAKHIR tanpa menghitung ulang — utk dashboard (read
+     * murni, tanpa side effect); status ambang dinilai ulang dari tax_rule
+     * atas angka tersimpan.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<HasilAgregasi> hasilTerakhir() {
+        return businessEntityRepository.findAll().stream().findFirst().flatMap(utama ->
+            aggregatedOmzetRepository.findFirstByBusinessEntityIdOrderByCalculatedAtDesc(utama.getId())
+                .map(baris -> {
+                    boolean agregasiKeluargaBerlaku = utama.getBentukBadan() == BentukBadanUsaha.OP
+                            || utama.getBentukBadan() == BentukBadanUsaha.PT_PERORANGAN;
+                    boolean lengkap = relatedEntityRepository
+                            .countByBusinessEntityIdAndOmzetTahunanDiketahuiIsNull(utama.getId()) == 0;
+                    return nilaiAmbang(utama, baris.getPeriodeTahun(),
+                            baris.getOmzetEntitasUtama(), baris.getOmzetEntitasTerkait(),
+                            baris.getOmzetGabungan(), agregasiKeluargaBerlaku, lengkap);
+                }));
     }
 
     /** Varian single-tenant: agregasi untuk satu-satunya business_entity terdaftar. */
