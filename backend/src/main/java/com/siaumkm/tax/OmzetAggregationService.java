@@ -142,7 +142,8 @@ public class OmzetAggregationService {
                                       boolean agregasiKeluargaBerlaku, boolean lengkap) {
         String kodeAturan = switch (utama.getBentukBadan()) {
             case OP -> "PPH-FINAL-UMKM-OP";
-            case PT_PERORANGAN, KOPERASI -> "PPH-FINAL-UMKM-PT-PERORANGAN";
+            case PT_PERORANGAN -> "PPH-FINAL-UMKM-PT-PERORANGAN";
+            case KOPERASI -> "PPH-FINAL-UMKM-KOPERASI"; // baris sendiri sejak V7 (batas 4 tahun)
             default -> null; // CV/FIRMA/PT_BIASA: di luar skema PPh Final — monitoring saja
         };
 

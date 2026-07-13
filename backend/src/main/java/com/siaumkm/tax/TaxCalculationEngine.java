@@ -29,19 +29,31 @@ public class TaxCalculationEngine {
 
     public record HasilKalkulasi(BigDecimal omzetKenaPajak, BigDecimal pajakTerhitung, String regulasiAcuan) {}
 
-    /**
-     * @param omzetBrutoBulanan omzet BULAN INI (bukan kumulatif tahunan — kumulatif
-     *                          dihitung oleh caller/OmzetAggregationJob untuk cek ambang)
-     * @param omzetKumulatifTahunan omzet kumulatif tahun berjalan, untuk cek pengecualian Rp500jt (khusus OP)
-     */
+    /** Kompatibilitas untuk bentuk badan tanpa batas waktu (OP/PT Perorangan). */
     public HasilKalkulasi hitungPphFinal(BentukBadanUsaha bentukBadan,
                                           BigDecimal omzetBrutoBulanan,
                                           BigDecimal omzetKumulatifTahunan,
                                           LocalDate tanggalTransaksi) {
+        return hitungPphFinal(bentukBadan, omzetBrutoBulanan, omzetKumulatifTahunan,
+                tanggalTransaksi, null);
+    }
+
+    /**
+     * @param omzetBrutoBulanan omzet BULAN INI (bukan kumulatif tahunan — kumulatif
+     *                          dihitung oleh caller/OmzetAggregationJob untuk cek ambang)
+     * @param omzetKumulatifTahunan omzet kumulatif tahun berjalan, untuk cek pengecualian Rp500jt (khusus OP)
+     * @param tanggalTerdaftarPajak wajib bila aturan bentuk badan punya batas_tahun_pajak (koperasi)
+     */
+    public HasilKalkulasi hitungPphFinal(BentukBadanUsaha bentukBadan,
+                                          BigDecimal omzetBrutoBulanan,
+                                          BigDecimal omzetKumulatifTahunan,
+                                          LocalDate tanggalTransaksi,
+                                          LocalDate tanggalTerdaftarPajak) {
 
         String kodeAturan = switch (bentukBadan) {
             case OP -> "PPH-FINAL-UMKM-OP";
-            case PT_PERORANGAN, KOPERASI -> "PPH-FINAL-UMKM-PT-PERORANGAN";
+            case PT_PERORANGAN -> "PPH-FINAL-UMKM-PT-PERORANGAN";
+            case KOPERASI -> "PPH-FINAL-UMKM-KOPERASI";
             default -> throw new IllegalStateException(
                 "Bentuk badan " + bentukBadan + " tidak lagi berhak PPh Final sejak PP 20/2026 " +
                 "(kecuali masa transisi ketentuan lama) — cek status_transisi_pajak, jangan hitung di sini.");
@@ -51,6 +63,8 @@ public class TaxCalculationEngine {
                 .orElseThrow(() -> new IllegalStateException(
                     "Tidak ada tax_rule aktif untuk " + kodeAturan + " pada tanggal " + tanggalTransaksi +
                     " — kemungkinan data tax_rule belum di-seed atau regulasi baru belum ditambahkan via /add-tax-rule."));
+
+        validasiBatasWaktu(rule, tanggalTransaksi, tanggalTerdaftarPajak);
 
         BigDecimal omzetKenaPajak = omzetBrutoBulanan;
 
@@ -66,5 +80,34 @@ public class TaxCalculationEngine {
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         return new HasilKalkulasi(omzetKenaPajak, pajak, rule.getRegulasiAcuan());
+    }
+
+    /**
+     * Batas waktu pemanfaatan sebagai DATA di tax_rule (Aturan Emas #3) — saat
+     * ini terisi hanya utk KOPERASI (PP 20/2026: maks 4 tahun pajak sejak
+     * terdaftar, inklusif tahun terdaftar; yang terdaftar sebelum PP berlaku
+     * memakai masa transisi flat s.d. tahun_pajak_akhir_transisi, mis. 2029).
+     */
+    private void validasiBatasWaktu(TaxRule rule, LocalDate tanggalTransaksi,
+                                    LocalDate tanggalTerdaftarPajak) {
+        if (rule.getBatasTahunPajak() == null) return; // tanpa batas waktu
+
+        if (tanggalTerdaftarPajak == null) {
+            throw new IllegalStateException(
+                "Tanggal terdaftar pajak wajib diisi untuk bentuk badan dengan batas waktu "
+                + "PPh Final (" + rule.getKodeAturan() + ") — lengkapi identitas usaha (Modul B1).");
+        }
+
+        boolean terdaftarSebelumAturan = tanggalTerdaftarPajak.isBefore(rule.getBerlakuDari());
+        int tahunTerakhir = (terdaftarSebelumAturan && rule.getTahunPajakAkhirTransisi() != null)
+                ? rule.getTahunPajakAkhirTransisi()
+                : tanggalTerdaftarPajak.getYear() + rule.getBatasTahunPajak() - 1;
+
+        if (tanggalTransaksi.getYear() > tahunTerakhir) {
+            throw new IllegalStateException(
+                "Batas waktu PPh Final terlampaui: terdaftar " + tanggalTerdaftarPajak
+                + ", tahun pajak terakhir " + tahunTerakhir + " (" + rule.getRegulasiAcuan()
+                + ") — penghasilan dihitung dengan ketentuan umum UU PPh, cek status_transisi_pajak.");
+        }
     }
 }

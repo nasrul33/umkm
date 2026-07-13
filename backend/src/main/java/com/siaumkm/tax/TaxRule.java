@@ -44,6 +44,16 @@ public class TaxRule {
     @Column(name = "bentuk_badan_berlaku", columnDefinition = "bentuk_badan_usaha[]")
     private List<BentukBadanUsaha> bentukBadanBerlaku;
 
+    // Batas waktu pemanfaatan sebagai DATA (Aturan Emas #3): jumlah tahun pajak
+    // maksimal sejak terdaftar (inklusif tahun terdaftar); NULL = tanpa batas.
+    @Column(name = "batas_tahun_pajak")
+    private Integer batasTahunPajak;
+
+    // Tahun pajak terakhir bagi WP yang terdaftar SEBELUM berlaku_dari aturan
+    // (masa transisi flat, mis. 2029 utk koperasi lama per PP 20/2026).
+    @Column(name = "tahun_pajak_akhir_transisi")
+    private Integer tahunPajakAkhirTransisi;
+
     @Column(name = "berlaku_dari", nullable = false)
     private LocalDate berlakuDari;
 
@@ -59,6 +69,8 @@ public class TaxRule {
     public BigDecimal getAmbangBawah() { return ambangBawah; }
     public BigDecimal getAmbangAtas() { return ambangAtas; }
     public List<BentukBadanUsaha> getBentukBadanBerlaku() { return bentukBadanBerlaku; }
+    public Integer getBatasTahunPajak() { return batasTahunPajak; }
+    public Integer getTahunPajakAkhirTransisi() { return tahunPajakAkhirTransisi; }
     public LocalDate getBerlakuDari() { return berlakuDari; }
     public LocalDate getBerlakuSampai() { return berlakuSampai; }
     public String getRegulasiAcuan() { return regulasiAcuan; }

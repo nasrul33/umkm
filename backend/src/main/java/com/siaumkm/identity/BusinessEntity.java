@@ -65,6 +65,11 @@ public class BusinessEntity {
     @Column(name = "tanggal_pengukuhan_pkp")
     private LocalDate tanggalPengukuhanPkp;
 
+    // Dasar cek batas waktu PPh Final utk bentuk badan ber-batas_tahun_pajak
+    // (koperasi, PP 20/2026) — lihat TaxCalculationEngine.
+    @Column(name = "tanggal_terdaftar_pajak")
+    private LocalDate tanggalTerdaftarPajak;
+
     @Column(name = "alamat_usaha")
     private String alamatUsaha;
 
@@ -96,6 +101,8 @@ public class BusinessEntity {
     public void setBentukBadan(BentukBadanUsaha v) { this.bentukBadan = v; }
     public boolean isStatusPkp() { return statusPkp; }
     public void setStatusPkp(boolean v) { this.statusPkp = v; }
+    public LocalDate getTanggalTerdaftarPajak() { return tanggalTerdaftarPajak; }
+    public void setTanggalTerdaftarPajak(LocalDate v) { this.tanggalTerdaftarPajak = v; }
     public StatusTransisiPajak getStatusTransisiPajak() { return statusTransisiPajak; }
     public void setStatusTransisiPajak(StatusTransisiPajak v) { this.statusTransisiPajak = v; }
 
