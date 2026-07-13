@@ -82,9 +82,15 @@ public class TaxCalculationEngine {
             omzetKenaPajak = omzetBrutoBulanan.max(BigDecimal.ZERO);
         }
 
+        // PER-11/PJ/2025 (era Coretax): pajak terutang dibulatkan ARITMETIS ke
+        // rupiah penuh (< 0,50 ke bawah, >= 0,50 ke atas = HALF_UP scale 0) —
+        // di SINI, bukan di lapisan billing, agar angka di log, kode billing,
+        // dan setoran identik. DPP tidak dipangkas (pembulatan ribuan hanya
+        // utk PKP tarif umum Pasal 17(4), bukan PPh Final).
         BigDecimal pajak = omzetKenaPajak
                 .multiply(rule.getTarifPersen())
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP)
+                .setScale(2, RoundingMode.UNNECESSARY);
 
         return new HasilKalkulasi(omzetKenaPajak, pajak, rule.getRegulasiAcuan(), rule.getId());
     }

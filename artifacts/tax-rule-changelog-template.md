@@ -28,6 +28,18 @@ Setiap perubahan tarif/ambang batas pajak WAJIB dicatat di sini sebelum atau ber
 
 ---
 
+## Pembulatan pajak terutang rupiah penuh — 13 Juli 2026 (integrasi e-billing V9)
+
+- **Regulasi acuan**: PER-11/PJ/2025 (era Coretax): pembulatan aritmetis — pecahan < 0,50 ke bawah, >= 0,50 ke atas (menggantikan rezim "selalu ke bawah" SE-22/PJ.24/1990 & PER-29/PJ/2015).
+- **Perubahan**: `TaxCalculationEngine` membulatkan pajak terutang ke rupiah penuh (HALF_UP scale 0, disimpan xx,00) — di engine, BUKAN di lapisan billing, agar angka di `tax_calculation_log`, kode billing, dan setoran identik; `BillingService` hanya meng-assert nilai sudah bulat (guard, bukan transformasi). DPP TIDAK dipangkas — pembulatan ribuan hanya berlaku PKP tarif umum Pasal 17(4), bukan PPh Final.
+- **Berlaku dari tanggal**: semua kalkulasi baru. **Limitation**: rekalkulasi masa pra-2025 secara ketat memakai rezim pembulatan-ke-bawah lama (selisih maks Rp1) — satu mode saja di engine, diterima terdokumentasi.
+- **Baris tax_rule terdampak**: tidak ada (rumus). Kolom V9 terkait: `kode_akun_pajak`=411128, `kode_jenis_setoran`=420 utk seluruh PPH-FINAL-UMKM* (KAP/KJS sebagai data).
+- **Test yang ditambahkan**: `TaxCalculationEngineTest#pajakDibulatkanAritmetisKeRupiahPenuh_perPER11PJ2025`, `BillingServiceTest#pajakBerdesimal_failFast_tanpaPanggilanHttp`.
+- **Dampak retroaktif**: tidak — baris log lama utuh (append-only).
+- **Dicatat oleh**: Claude Code (konsultasi tax-compliance-specialist, sumber PAJAK.COM/Ortax/DDTC)
+
+---
+
 ## Rumus DPP bulan penembusan Rp500 juta — 13 Juli 2026 (V8: koreksi TaxCalculationEngine)
 
 - **Regulasi acuan**: PP 55/2022 Pasal 60 jo. PMK 164/2023 (dipertahankan PP 20/2026): tarif 0,5% hanya dikenakan atas bagian peredaran bruto di atas Rp500 juta.

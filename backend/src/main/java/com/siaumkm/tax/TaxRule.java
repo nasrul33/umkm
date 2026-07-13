@@ -54,6 +54,13 @@ public class TaxRule {
     @Column(name = "tahun_pajak_akhir_transisi")
     private Integer tahunPajakAkhirTransisi;
 
+    // KAP/KJS untuk kode billing DJP (V9) — parameter regulasi = data.
+    @Column(name = "kode_akun_pajak", length = 6)
+    private String kodeAkunPajak;
+
+    @Column(name = "kode_jenis_setoran", length = 3)
+    private String kodeJenisSetoran;
+
     @Column(name = "berlaku_dari", nullable = false)
     private LocalDate berlakuDari;
 
@@ -72,6 +79,8 @@ public class TaxRule {
     public List<BentukBadanUsaha> getBentukBadanBerlaku() { return bentukBadanBerlaku; }
     public Integer getBatasTahunPajak() { return batasTahunPajak; }
     public Integer getTahunPajakAkhirTransisi() { return tahunPajakAkhirTransisi; }
+    public String getKodeAkunPajak() { return kodeAkunPajak; }
+    public String getKodeJenisSetoran() { return kodeJenisSetoran; }
     public LocalDate getBerlakuDari() { return berlakuDari; }
     public LocalDate getBerlakuSampai() { return berlakuSampai; }
     public String getRegulasiAcuan() { return regulasiAcuan; }

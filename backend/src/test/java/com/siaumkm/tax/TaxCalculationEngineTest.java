@@ -108,6 +108,25 @@ class TaxCalculationEngineTest {
     }
 
     @Test
+    void pajakDibulatkanAritmetisKeRupiahPenuh_perPER11PJ2025() {
+        // DPP 50.000.100 -> 0,5% = 250.000,50 -> HALF_UP -> 250.001 (bukan 250.000,50)
+        var naik = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("50000100"),
+                new BigDecimal("600000000"),
+                LocalDate.of(2026, 7, 1));
+        assertThat(naik.pajakTerhitung()).isEqualByComparingTo(new BigDecimal("250001"));
+
+        // DPP 49.999.898 -> 249.999,49 -> ke bawah -> 249.999
+        var turun = engine.hitungPphFinal(
+                BentukBadanUsaha.OP,
+                new BigDecimal("49999898"),
+                new BigDecimal("600000000"),
+                LocalDate.of(2026, 7, 1));
+        assertThat(turun.pajakTerhitung()).isEqualByComparingTo(new BigDecimal("249999"));
+    }
+
+    @Test
     void omzetBulanNegatif_tidakPernahPajakNegatif() {
         var hasil = engine.hitungPphFinal(
                 BentukBadanUsaha.OP,

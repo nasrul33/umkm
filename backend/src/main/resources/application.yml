@@ -43,6 +43,9 @@ siaumkm:
     retry:
       max-attempts: 3
       backoff-ms: 2000
+    timeout:
+      connect-ms: 3000
+      read-ms: 10000
 
 logging:
   level:
